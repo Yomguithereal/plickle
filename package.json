@@ -1,7 +1,7 @@
 {
   "name": "tsukemono",
   "version": "0.1.0",
-  "description": "TODO",
+  "description": "Create, parse and execute Gherkin-like DSLs quick and easy.",
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
