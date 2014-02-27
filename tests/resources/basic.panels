@@ -1,0 +1,22 @@
+# Basic Panels definition
+Panels: Basic user panels
+  Just basic user panels to demonstrate and test.
+  Comments might take several lines.
+
+  Panel: Old Males
+    If the user's age is superior to 45
+    And if the user is a man
+    Then he belongs to this panel.
+
+  Panel: Old Females
+    If the user's age is superior to 45
+    And the user is a woman
+    Then she belongs to this panel.
+
+  Panel: Young Males
+    If the user is a man
+    Then he belongs to this panel.
+
+  Panel: Young Females
+    If the user is a woman
+    Then she belongs to this panel.
