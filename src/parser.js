@@ -35,7 +35,7 @@ function Parser(grammar) {
   };
 
   this.shouldNotParse = function(line) {
-    return !line || line.charAt(0) === this.grammar.comment;
+    return !line || line.charAt(0) === this.grammar.comments;
   };
 
   // Parsing functions
@@ -47,12 +47,13 @@ function Parser(grammar) {
 
     // Holders
     var description = '',
+        header = false,
         blocks = [],
         currentBlockIndex,
         name;
 
     // Iterating through lines
-    string.split('\n').map(function(line, i) {
+    string.split('\n').map(function(line) {
       line = _this.cleanLine(line);
       
       // Next if commentary
@@ -60,8 +61,9 @@ function Parser(grammar) {
         return false;
 
       // Parsing header
-      if (i === 1) {
+      if (!header) {
         name = _this.parseHeader(line);
+        header = true;
       }
       else {
         blockLine = _this.regexes.header.test(line);
