@@ -65,8 +65,9 @@ function Wrapper(grammar) {
     };
   });
 
-  this.execute = function(string) {
+  this.execute = function(string, config) {
     var data = this.parse(string),
+        config = config || {},
         stop = false,
         matched,
         matches,
@@ -77,9 +78,16 @@ function Wrapper(grammar) {
 
     var i, j, k, l, m, n;
 
+    // Sorting and or filtering
+    if (config.filterFunc !== undefined)
+      data = data.filter(config.filterFunc);
+
+    if (config.sortFunc !== undefined)
+      data = data.sort(config.sortFunc);
+
     // On execution
-    if (this.onExecution !== undefined)
-      this.onExecution(data);
+    if (this.onExecutionStart !== undefined)
+      this.onExecutionStart(data);
 
     // Iterating through blocks
     for (i = 0, l = data.blocks.length; i < l; i++) {
