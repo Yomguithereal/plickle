@@ -98,7 +98,7 @@ function Wrapper(grammar) {
 
       // Triggering block beginning callback if any
       if (this.onBlockStart !== undefined)
-        stop = !this.onBlockStart(block);
+        stop = this.onBlockStart(block) === false;
 
       // Iterating through steps
       if (!stop) {
