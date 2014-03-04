@@ -79,11 +79,11 @@ function Wrapper(grammar) {
     var i, j, k, l, m, n;
 
     // Sorting and or filtering
-    if (config.filterFunc !== undefined)
-      data = data.filter(config.filterFunc);
+    if (config.filter !== undefined)
+      data.blocks = data.blocks.filter(config.filter);
 
-    if (config.sortFunc !== undefined)
-      data = data.sort(config.sortFunc);
+    if (config.sort !== undefined)
+      data.blocks = data.blocks.sort(config.sort);
 
     // On execution
     if (this.onExecutionStart !== undefined)
