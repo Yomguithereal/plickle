@@ -10,6 +10,10 @@
 var helpers = require('./helpers'),
     Parser = require('./parser');
 
+function capitalize(s) {
+  return s.charAt(0).toUpperCase() + s.slice(1);
+}
+
 function Wrapper(grammar) {
   var _this = this;
 
@@ -47,22 +51,20 @@ function Wrapper(grammar) {
     });
   };
 
-  this.def = function(regex, callback) {
-    this.buildDefinition(regex, callback, 'normal');
-  };
-
   this._templates = [
-    'If',
-    'And',
-    'Or',
-    'Then',
-    'Else'
+    'normal',
+    'if',
+    'and',
+    'or',
+    'then',
+    'else'
   ];
 
   this._templates.map(function(t) {
-    _this['def' + t] = function(regex, callback) {
-      _this.buildDefinition(regex, callback, t.toLowerCase());
-    };
+    _this['def' + (t === 'normal' ? '' : capitalize(t))] =
+      function(regex, callback) {
+        _this.buildDefinition(regex, callback, t);
+      };
   });
 
   this.execute = function(string, config) {

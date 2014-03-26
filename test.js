@@ -8,4 +8,4 @@ var u2 = p.userPanel({sex: 'woman', age: 12});
 var u3 = p.userPanel({sex: 'man', age: 34});
 var u4 = p.userPanel({sex: 'man', age: 100});
 
-console.log(u1, u2, u3, u4);
+console.log([u1, u2, u3, u4].join('\n'));
