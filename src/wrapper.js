@@ -5,7 +5,6 @@
  * Author: PLIQUE Guillaume (Yomguithereal)
  */
 
-// TODO: order the blocks in a precise order?
 // TODO: possibility to define rules for each of the blocks separately
 var helpers = require('./helpers'),
     Parser = require('./parser');
@@ -26,19 +25,25 @@ function Wrapper(grammar) {
   this._vars = {};
 
   // Methods
+  //---------
+
+  // Parser abstract
   this.parse = function(string) {
     return this._parser.parse(string);
   };
 
+  // Set an internal variable
   this.set = function(key, value) {
     this._vars[key] = value;
     return this;
   };
 
+  // Get an internal variable
   this.get = function(key) {
     return (key === undefined) ? this._vars : this._vars[key];
   };
 
+  // Build an execution definition
   this.buildDefinition = function(regex, callback, type) {
     var func = function(matches, context) {
       return callback.apply(_this, matches.slice(1).concat(context));
@@ -51,6 +56,7 @@ function Wrapper(grammar) {
     });
   };
 
+  // Possible types of definition
   this._templates = [
     'normal',
     'if',
@@ -60,6 +66,7 @@ function Wrapper(grammar) {
     'else'
   ];
 
+  // Dynamically creating the definition methods from templates
   this._templates.map(function(t) {
     _this['def' + (t === 'normal' ? '' : capitalize(t))] =
       function(regex, callback) {
@@ -67,6 +74,19 @@ function Wrapper(grammar) {
       };
   });
 
+  // Loading definitions in batch
+  this.defs = function(array) {
+    if (toString.call(array) !== '[object Array]')
+      throw new TypeError(
+        'tsukemono.wrapper.def: first argument should be an array.'
+      );
+
+    array.map(function(def) {
+      _this['def' + (def.type || '')](def.pattern, def.method);
+    });
+  };
+
+  // Main execution function
   this.execute = function(string, config) {
     var data = this.parse(string),
         config = config || {},
