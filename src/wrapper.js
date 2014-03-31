@@ -78,11 +78,18 @@ function Wrapper(grammar) {
   this.defs = function(array) {
     if (toString.call(array) !== '[object Array]')
       throw new TypeError(
-        'tsukemono.wrapper.def: first argument should be an array.'
+        'tsukemono.wrapper.defs: first argument should be an array.'
       );
 
     array.map(function(def) {
-      _this['def' + (def.type || '')](def.pattern, def.method);
+      var type = (!def.type || def.type === 'normal') ? '' : def.type;
+
+      // Is this type authorized?
+      if (!~_this._templates.indexOf(type || 'normal'))
+        throw 'tsukemono.wrapper.defs: wrong definition type (' + type + ')';
+
+      // Registering the definition
+      _this['def' + type](def.pattern, def.method);
     });
   };
 
