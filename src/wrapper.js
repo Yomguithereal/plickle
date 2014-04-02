@@ -149,7 +149,8 @@ function Wrapper(grammar) {
                   matches, 
                   {
                     block: block,
-                    stepIndex: i
+                    blockIndex: i,
+                    stepIndex: j
                   }
                 );
                 
