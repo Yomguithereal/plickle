@@ -6,6 +6,13 @@
   "scripts": {
     "test": "mocha"
   },
+  "keywords": [
+    "parser",
+    "dsl",
+    "gherkin",
+    "syntax",
+    "language"
+  ],
   "author": "Yomguithereal",
   "license": "MIT",
   "devDependencies": {
