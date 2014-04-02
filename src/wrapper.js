@@ -9,10 +9,6 @@
 var helpers = require('./helpers'),
     Parser = require('./parser');
 
-function capitalize(s) {
-  return s.charAt(0).toUpperCase() + s.slice(1);
-}
-
 function Wrapper(grammar) {
   var _this = this;
 
@@ -68,7 +64,7 @@ function Wrapper(grammar) {
 
   // Dynamically creating the definition methods from templates
   this._templates.map(function(t) {
-    _this['def' + (t === 'normal' ? '' : capitalize(t))] =
+    _this['def' + (t === 'normal' ? '' : helpers.capitalize(t))] =
       function(regex, callback) {
         _this.buildDefinition(regex, callback, t);
       };
@@ -89,7 +85,7 @@ function Wrapper(grammar) {
         throw 'tsukemono.wrapper.defs: wrong definition type (' + type + ')';
 
       // Registering the definition
-      _this['def' + type](def.pattern, def.method);
+      _this['def' + helpers.capitalize(type)](def.pattern, def.method);
     });
   };
 
