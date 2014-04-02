@@ -5,8 +5,8 @@
  * Author: PLIQUE Guillaume (Yomguithereal)
  */
 
-var tsukemono = require('../../index'),
-    grammar = require('./panels.grammar');
+var tsukemono = require('../../../index'),
+    grammar = require('./grammar');
 
 function PanelsInterpreter(string) {
   tsukemono.wrapper.call(this, grammar);

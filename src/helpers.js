@@ -10,9 +10,13 @@ exports.capitalize = function(str) {
 }
 
 exports.some = function(array, element) {
-  for (var i = 0, l = array.length; i < l; i++) {
+  var l = array.length,
+      i;
+
+  for (i = 0; i < l; i++) {
     if (array[i] === element)
       return true;
   }
+
   return false;
 }
