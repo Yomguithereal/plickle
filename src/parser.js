@@ -6,7 +6,6 @@
  */
 
 // TODO: function to format error msgs plus line in file?
-// TODO: parse also inline keywords (line breakers)
 var helpers = require('./helpers');
 
 function Parser(grammar) {
