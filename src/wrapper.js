@@ -6,6 +6,8 @@
  */
 
 // TODO: possibility to define rules for each of the blocks separately
+// TODO: questionning the 'then' part
+// TODO: apply only the condition to next non-condition step?
 var helpers = require('./helpers'),
     Parser = require('./parser');
 
@@ -123,7 +125,7 @@ function Wrapper(grammar) {
 
       // Triggering block beginning callback if any
       if (this.onBlockStart !== undefined)
-        stop = this.onBlockStart(block) === false;
+        stop = (this.onBlockStart(block) === false);
 
       // Iterating through steps
       if (!stop) {
