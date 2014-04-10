@@ -1,5 +1,5 @@
 {
-  "name": "tsukemono",
+  "name": "plickle",
   "version": "0.1.0",
   "description": "Create, parse and execute Gherkin-like DSLs quick and easy.",
   "main": "index.js",
@@ -20,6 +20,6 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/Yomguithereal/tsukemono.git"
+    "url": "https://github.com/Yomguithereal/plickle.git"
   }
 }

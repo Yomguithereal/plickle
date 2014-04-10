@@ -1,5 +1,5 @@
 /**
- * Tsukemono Basic Testing
+ * Plickle Basic Testing
  * ========================
  *
  * Author: PLIQUE Guillaume (Yomguithereal)

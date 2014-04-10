@@ -1,13 +1,14 @@
 /**
- * Tsukemono Wrapper
+ * Plickle Wrapper
  * ==================
  *
  * Author: PLIQUE Guillaume (Yomguithereal)
  */
 
-// TODO: possibility to define rules for each of the blocks separately
-// TODO: questionning the 'then' part
-// TODO: apply only the condition to next non-condition step?
+// TODO: possibility to define rules for each of the blocks separately?
+// TODO: bind events redo.
+// TODO: sublevels? recursively?
+
 var helpers = require('./helpers'),
     Parser = require('./parser');
 
@@ -18,12 +19,31 @@ function Wrapper(grammar) {
   this._parser = new Parser(grammar);
 
   // State
-  this._definitions = [];
   this._condition = true;
+  this._definitions = [];
+  this._events = {};
   this._vars = {};
 
   // Methods
   //---------
+
+  // Call event if it exists
+  this._dispatch = function(name) {
+    var e = this._events[name];
+
+    if (e !== undefined)
+      return e.call(this, Array.prototype.slice.call(arguments, 1));
+  }
+
+  // Bind an event
+  this.bind = function(name, fn) {
+
+    if (typeof fn !== 'function')
+      throw new TypeError(
+        'plickle.wrapper.bind: trying to bind a no-function to event ' + name
+      ); 
+    this._events[name] = fn;
+  }
 
   // Parser abstract
   this.parse = function(string) {
@@ -76,7 +96,7 @@ function Wrapper(grammar) {
   this.defs = function(array) {
     if (toString.call(array) !== '[object Array]')
       throw new TypeError(
-        'tsukemono.wrapper.defs: first argument should be an array.'
+        'plickle.wrapper.defs: first argument should be an array.'
       );
 
     array.map(function(def) {
@@ -84,7 +104,7 @@ function Wrapper(grammar) {
 
       // Is this type authorized?
       if (!~_this._templates.indexOf(type || 'normal'))
-        throw 'tsukemono.wrapper.defs: wrong definition type (' + type + ')';
+        throw 'plickle.wrapper.defs: wrong definition type (' + type + ')';
 
       // Registering the definition
       _this['def' + helpers.capitalize(type)](def.pattern, def.method);
@@ -113,8 +133,7 @@ function Wrapper(grammar) {
       data.blocks = data.blocks.sort(config.sort);
 
     // On execution
-    if (this.onExecutionStart !== undefined)
-      this.onExecutionStart(data);
+    this._dispatch('execution.start', data);
 
     // Iterating through blocks
     for (i = 0, l = data.blocks.length; i < l; i++) {
@@ -124,8 +143,7 @@ function Wrapper(grammar) {
       this._condition = true;
 
       // Triggering block beginning callback if any
-      if (this.onBlockStart !== undefined)
-        stop = (this.onBlockStart(block) === false);
+      stop = (this._dispatch('block.start', block) === false);
 
       // Iterating through steps
       if (!stop) {
@@ -169,14 +187,13 @@ function Wrapper(grammar) {
           }
 
           // Throw error on unmatched string
-          if (!matched && this.onUnmatchedStep !== undefined)
-            this.onUnmatchedStep(step);
+          if (!matched)
+            this._dispatch('step.unmatched', step);
         }
       }
 
       // Triggering block ending callback if any
-      if (this.onBlockEnd !== undefined)
-        this.onBlockEnd(block);
+      this._dispatch('block.end', block);
     }
   };
 }

@@ -1,5 +1,5 @@
 /**
- * Tsukemono Parser
+ * Plickle Parser
  * =================
  *
  * Author: PLIQUE Guillaume (Yomguithereal)
@@ -107,7 +107,7 @@ function Parser(grammar) {
 
     if (!~line.toLowerCase().indexOf(this.grammar.header))
       throw (
-        'tsukemono.parser: Error - incorrect header (' + 
+        'plickle.parser: Error - incorrect header (' + 
         matches[1]  + ' instead of ' +
         helpers.capitalize(this.grammar.header) + ').'
       );
@@ -127,7 +127,7 @@ function Parser(grammar) {
     // If the block type is not registered
     if (!helpers.some(this.grammar.blocks, blockType.toLowerCase()))
       throw (
-        'tsukemono.parser: Error - unregistered block type (' + 
+        'plickle.parser: Error - unregistered block type (' + 
         matches[1] + ').'
       );
 

@@ -1,5 +1,5 @@
 /**
- * Tsukemono Helpers
+ * Plickle Helpers
  * ==================
  *
  * Author: PLIQUE Guillaume (Yomguithereal)

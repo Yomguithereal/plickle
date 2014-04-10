@@ -1,5 +1,5 @@
 /**
- * Panels Tsukemono Grammar
+ * Panels Plickle Grammar
  * =========================
  *
  * Author: PLIQUE Guillaume (Yomguithereal)

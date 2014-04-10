@@ -5,11 +5,11 @@
  * Author: PLIQUE Guillaume (Yomguithereal)
  */
 
-var tsukemono = require('../../../index'),
+var plickle = require('../../../index'),
     grammar = require('./grammar');
 
 function PanelsInterpreter(string) {
-  tsukemono.wrapper.call(this, grammar);
+  plickle.wrapper.call(this, grammar);
   var _this = this;
 
   // Properties
@@ -26,11 +26,11 @@ function PanelsInterpreter(string) {
   }
 
   // Callbacks
-  this.onBlockStart = function(b) {
+  this.bind('block.start', function(b) {
 
-    // Skipping if panel has been found
+    // Breaking if panel has been found
     return !this.panel;
-  }
+  })
 
   // Definitions
   this.defIf(
