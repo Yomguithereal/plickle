@@ -3,6 +3,7 @@
  * ===========================
  *
  * Author: PLIQUE Guillaume (Yomguithereal)
+ * Organization: Médialab SciencesPo
  */
 var parser = require('./src/parser'),
     wrapper = require('./src/wrapper');

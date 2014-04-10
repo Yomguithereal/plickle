@@ -3,6 +3,7 @@
  * =================
  *
  * Author: PLIQUE Guillaume (Yomguithereal)
+ * Organization: Médialab SciencesPo
  */
 
 // TODO: function to format error msgs plus line in file?

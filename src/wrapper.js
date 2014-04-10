@@ -3,6 +3,7 @@
  * ==================
  *
  * Author: PLIQUE Guillaume (Yomguithereal)
+ * Organization: Médialab SciencesPo
  */
 
 // TODO: possibility to define rules for each of the blocks separately?
