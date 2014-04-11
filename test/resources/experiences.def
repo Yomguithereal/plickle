@@ -1,0 +1,17 @@
+# Test Experiences
+Experiences: Basic test case
+  Just a basic experience definition to see if
+  nested steps are working.
+
+  Experience: First experience
+    Step: Step n°1
+      Output given amount
+      Output testcase
+    Step: Step n°2
+      Input user scenario
+      Output results
+
+  Experience: Second experience
+    Logic in block level
+    Step: Unique step
+      Output thingie

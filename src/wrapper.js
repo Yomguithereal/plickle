@@ -1,14 +1,13 @@
 /**
  * Plickle Wrapper
- * ==================
+ * ================
  *
  * Author: PLIQUE Guillaume (Yomguithereal)
  * Organization: Médialab SciencesPo
  */
 
 // TODO: possibility to define rules for each of the blocks separately?
-// TODO: bind events redo.
-// TODO: sublevels? recursively?
+// TODO: sublevels?
 
 var helpers = require('./helpers'),
     Parser = require('./parser');

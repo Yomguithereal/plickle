@@ -8,6 +8,7 @@
 
 var fs = require('fs'),
     assert = require('assert'),
+    plickle = require('../index');
     PanelInterpreter = require('./lang/panels/interpreter');
 
 /**
@@ -17,7 +18,7 @@ describe('the given users', function() {
   it('should belong to the correct panels', function() {
 
     // Loading the definition file
-    var basic = fs.readFileSync('./test/resources/basic.panels', 'utf-8'),
+    var basic = fs.readFileSync('./test/resources/panels.def', 'utf-8'),
         i = new PanelInterpreter(basic);
 
     // Assertions
@@ -25,5 +26,13 @@ describe('the given users', function() {
     assert.equal('Young Females', i.userPanel({sex: 'woman', age: 12}));
     assert.equal('Young Males', i.userPanel({sex: 'man', age: 34}));
     assert.equal('Old Males', i.userPanel({sex: 'man', age: 100}));
+  });
+});
+
+/**
+ * Nested steps
+ */
+describe('the nested step', function() {
+  it('should function correctly', function() {
   });
 });

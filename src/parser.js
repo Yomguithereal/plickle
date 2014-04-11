@@ -1,31 +1,51 @@
 /**
  * Plickle Parser
- * =================
+ * ===============
  *
  * Author: PLIQUE Guillaume (Yomguithereal)
  * Organization: Médialab SciencesPo
  */
-
-// TODO: function to format error msgs plus line in file?
 var helpers = require('./helpers');
 
 function Parser(grammar) {
   var _this = this;
 
-  // Grammar
-  // TODO: enforce better
-  var _lowercase = function(s) {
-    return s.toLowerCase();
+  // Helpers
+  function errorMsg(msg) {
+    throw new Error('plickle.parser: ' + msg +
+                    (_this.lineno ? '\nlineno: ' + _this.lineno : ''));
   }
 
+  function cleanBlocks(blocks) {
+    return blocks.map(function(b) {
+      if (typeof b === 'object') {
+        if (!b.children)
+          return b.name.toLowerCase();
+        else
+          return {
+            name: b.name.toLowerCase(),
+            children: cleanBlocks(b.children)
+          };
+      }
+      else {
+        return b.toLowerCase();
+      }
+    });
+  }
+
+  // Grammar
   this.grammar = {
+    blocks: (cleanBlocks(grammar.blocks) || ['block']),
     comments: grammar.comments || '#',
     header: (grammar.header || 'type').toLowerCase(),
-    blocks: (grammar.blocks || ['block']).map(_lowercase)
-  }
+    separator: grammar.separator || ':'
+  };
 
   this.regexes = {
-    header: /([^:]*):(.*)/i
+    header: new RegExp(
+      '([^' + this.grammar.separator + ']*)' + this.grammar.separator + '(.*)',
+      'i'
+    )
   };
 
   // Utilities
@@ -42,59 +62,101 @@ function Parser(grammar) {
   //-------------------
   this.parse = function(string) {
 
-    // State
-    var top = inBlocks = blockLine = false;
+    // Resetting lineno
+    this.lineno = null;
 
-    // Holders
-    var description = '',
-        header = false,
-        blocks = [],
-        currentBlockIndex,
-        name;
+    // State
+    var header = false,
+        inBlocks = false,
+        inSubBlocks = false,
+        blockLvl = false,
+        subBlockLvl = false,
+        blockMatches = null,
+        currentBlockIndex = null,
+        currentSubBlockIndex = null;
+
+    // Placeholders
+    var blocks = [],
+        description = '',
+        name = '';
 
     // Iterating through lines
-    string.split('\n').map(function(line) {
-      line = _this.cleanLine(line);
+    string.split('\n').map(function(line, i) {
+
+      // Updating line number
+      this.lineno = i + 1;
+
+      // Cleaning the line
+      line = this.cleanLine(line);
       
-      // Next if commentary
-      if (_this.shouldNotParse(line))
-        return false;
+      // Next if invalid line
+      if (this.shouldNotParse(line))
+        return;
 
       // Parsing header
       if (!header) {
-        name = _this.parseHeader(line);
+        name = this.parseHeader(line);
         header = true;
       }
       else {
-        blockLine = _this.regexes.header.test(line);
+
+        // Do we have a block header?
+        blockMatches = line.match(this.regexes.header);
+        blockLine = !!blockMatches;
 
         // Are we in blocks?
         inBlocks = inBlocks || blockLine;
 
         // Parsing description
         if (!inBlocks) {
-          description += ' ' + _this.parseDescription(line);
+          description += ' ' + this.parseDescription(line);
         }
 
         // Parsing blocks
         else {
 
           if (blockLine) {
+            var blockType = blockMatches[1].toLowerCase(),
+                blockName = blockMatches[2].trim();
 
-            // Getting new block
-            blocks.push(_this.parseBlock(line));
-            currentBlockIndex = blocks.length - 1;
+            // Block or SubBlock?
+            blockLvl = this.checkBlock(blockType);
+
+            // TODO: refactor
+            if (currentBlockIndex !== null) {
+              var type = blocks[currentBlockIndex].type,
+                  grammarBlock = helpers.first(this.grammar.blocks, function(b) {
+                    return b === type || b.name === type;
+                  });
+              subBlockLvl = this.checkSubBlock(blockType, grammarBlock.children);
+            }
+
+            if (!blockLvl && !subBlockLvl) {
+              errorMsg('invalid block "' + blockMatches[1] + '"');
+            }
+            else if (blockLvl) {
+              blocks.push(this.parseBlock(blockType, blockName, true));
+              currentBlockIndex = blocks.length - 1;
+            }
+            else {
+              blocks[currentBlockIndex].substeps.push(
+                this.parseBlock(blockType, blockName)
+              );
+              currentSubBlockIndex = blocks[currentBlockIndex].substeps.length - 1;
+            }
           }
           else {
-
-            // Getting new step
-            blocks[currentBlockIndex].steps.push(
-              _this.parseStep(line)
-            );
+            if (blockLvl)
+              blocks[currentBlockIndex].steps.push(this.parseStep(line));
+            else if (subBlockLvl)
+              blocks[currentBlockIndex].substeps[currentSubBlockIndex].steps.push(
+                this.parseStep(line)
+              );
           }
         }
       }
-    });
+    }, this);
+
     return {
       name: name,
       header: this.grammar.header,
@@ -107,11 +169,9 @@ function Parser(grammar) {
     var matches = line.match(this.regexes.header);
 
     if (!~line.toLowerCase().indexOf(this.grammar.header))
-      throw (
-        'plickle.parser: Error - incorrect header (' + 
-        matches[1]  + ' instead of ' +
-        helpers.capitalize(this.grammar.header) + ').'
-      );
+      errorMsg('incorrect header "' +
+               matches[1]  + '" instead of "' +
+               helpers.capitalize(this.grammar.header) + '".');
 
     return matches[2].trim();
   };
@@ -120,23 +180,33 @@ function Parser(grammar) {
     return line.trim();
   };
 
-  this.parseBlock = function(line) {
-    var matches = line.match(this.regexes.header) || [],
-        blockType = matches[1],
-        blockName = matches[2];
+  this.checkBlock = function(blockType) {
+    var test = function(b) {
+      return b === blockType || b.name === blockType;
+    };
 
-    // If the block type is not registered
-    if (!helpers.some(this.grammar.blocks, blockType.toLowerCase()))
-      throw (
-        'plickle.parser: Error - unregistered block type (' + 
-        matches[1] + ').'
-      );
+    return helpers.some(this.grammar.blocks, test);
+  };
 
-    return {
+  this.checkSubBlock = function(blockType, children) {
+    var test = function(b) {
+      return b === blockType || b.name === blockType;
+    };
+
+    return helpers.some(children, test);
+  };
+
+  this.parseBlock = function(blockType, blockName, sub) {
+    var block = {
       type: blockType,
-      name: blockName.trim(),
+      name: blockName,
       steps: []
     };
+
+    if (sub)
+      block.substeps = [];
+    
+    return block;
   };
 
   this.parseStep = function(line) {

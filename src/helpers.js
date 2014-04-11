@@ -1,23 +1,33 @@
 /**
  * Plickle Helpers
- * ==================
+ * ================
  *
  * Author: PLIQUE Guillaume (Yomguithereal)
  * Organization: Médialab SciencesPo
  */
 
-exports.capitalize = function(str) {
+function capitalize(str) {
   return str.charAt(0).toUpperCase() + str.slice(1);
 }
 
-exports.some = function(array, element) {
+function first(array, fn) {
   var l = array.length,
       i;
 
   for (i = 0; i < l; i++) {
-    if (array[i] === element)
-      return true;
+    if (fn(array[i]))
+      return array[i];
   }
 
   return false;
 }
+
+function some(array, fn) {
+  return !!first(array, fn);
+}
+
+module.exports = {
+  capitalize: capitalize,
+  first: first,
+  some: some
+};
