@@ -59,7 +59,7 @@ function Wrapper(grammar) {
   } 
 
   // Iteration on blocks and subBlocks
-  this._iterate = function(blocks, eventPrefix, context) {
+  this._iterate = function(blocks, type, context) {
     var defs,
         stop,
         block,
@@ -78,7 +78,7 @@ function Wrapper(grammar) {
       this._condition = true;
 
       // Stopping if callback before return false
-      stop = (this._dispatch(eventPrefix + '.before', block) === false);
+      stop = (this._dispatch(type + '.before', block) === false);
 
       if (stop)
         return;
@@ -101,7 +101,7 @@ function Wrapper(grammar) {
             if (this._pass(def.type)) {
               result = def.fn(
                 matches,
-                helpers.extend(context, formatContext(block, step, eventPrefix))
+                helpers.extend(context, formatContext(block, step, type))
               );
 
               // In logical cases, we apply the new condition
@@ -112,13 +112,18 @@ function Wrapper(grammar) {
           }
         }
 
+        // Iterating through subBlocks
+        if (block.subBlocks !== undefined)
+          this._iterate(block.subBlocks, 'subBlock');
+
         // Unmatched
-        this._dispatch('step.unmatched', step, eventPrefix);
+        if (type === 'block')
+          this._dispatch('step.unmatched', step);
       }
     }
 
     // Block end
-    this._dispatch(eventPrefix + '.after', block);
+    this._dispatch(type + '.after', block);
   };
 
   // Public API
