@@ -142,11 +142,11 @@ function Parser(grammar) {
               currentBlock = blocks[blocks.length -1];
             }
             else if (subBlockLvl) {
-              currentBlock.substeps.push(
+              currentBlock.subBlocks.push(
                 this.parseBlock(blockType, blockName)
               );
               currentSubBlock =
-                currentBlock.substeps[currentBlock.substeps - 1];
+                currentBlock.subBlocks[currentBlock.subBlocks - 1];
             }
             else {
               errorMsg('invalid block "' + blockMatches[1] + '"');
@@ -204,7 +204,7 @@ function Parser(grammar) {
     };
 
     if (sub)
-      block.substeps = [];
+      block.subBlocks = [];
     
     return block;
   };

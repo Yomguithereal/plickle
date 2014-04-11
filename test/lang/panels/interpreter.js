@@ -27,7 +27,7 @@ function PanelsInterpreter(string) {
   }
 
   // Callbacks
-  this.bind('block.start', function(b) {
+  this.bind('block.before', function(b) {
 
     // Breaking if panel has been found
     return !this.panel;

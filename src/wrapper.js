@@ -24,8 +24,8 @@ function Wrapper(grammar) {
   this._events = {};
   this._vars = {};
 
-  // Methods
-  //---------
+  // Private Utilities
+  //-------------------
 
   // Call event if it exists
   this._dispatch = function(name) {
@@ -34,6 +34,27 @@ function Wrapper(grammar) {
     if (e !== undefined)
       return e.call(this, Array.prototype.slice.call(arguments, 1));
   }
+
+  // Should we run the function
+  this._pass = function(type) {
+    return !((type === 'and' && !this._condition)  ||
+             (type === 'or' && this._condition)    ||
+             (type === 'then' && !this._condition) ||
+             (type === 'else' && this._condition));
+  };
+
+  // Applying condition
+  this._applyCondition = function(type, result) {
+    if (type === 'if')
+      this._condition = result;
+    else if (type === 'and')
+      this._condition = this._condition && result;
+    else if (type === 'or')
+      this._condition = this._condition || result;
+  };
+
+  // Public API
+  //------------
 
   // Bind an event
   this.bind = function(name, fn) {
@@ -121,19 +142,21 @@ function Wrapper(grammar) {
         result,
         block,
         step,
+        substep,
         def;
 
-    var i, j, k, l, m, n;
+    var i, j, k, l, m, n, o, p;
 
-    // Sorting and or filtering
+    // Sorting
     if (config.filter !== undefined)
       data.blocks = data.blocks.filter(config.filter);
 
+    // Filtering
     if (config.sort !== undefined)
       data.blocks = data.blocks.sort(config.sort);
 
     // On execution
-    this._dispatch('execution.start', data);
+    this._dispatch('execution.before', data);
 
     // Iterating through blocks
     for (i = 0, l = data.blocks.length; i < l; i++) {
@@ -143,7 +166,7 @@ function Wrapper(grammar) {
       this._condition = true;
 
       // Triggering block beginning callback if any
-      stop = (this._dispatch('block.start', block) === false);
+      stop = (this._dispatch('block.before', block) === false);
 
       // Iterating through steps
       if (!stop) {
@@ -160,26 +183,20 @@ function Wrapper(grammar) {
               matched = true;
 
               // Should we run the function
-              if (!((def.type === 'and' && !this._condition) ||
-                    (def.type === 'or' && this._condition) ||
-                    (def.type === 'then' && !this._condition) ||
-                    (def.type === 'else' && this._condition))) {
+              if (this._pass(def.type)) {
 
                 result = def.func(
                   matches, 
                   {
                     block: block,
                     blockIndex: i,
-                    stepIndex: j
+                    stepIndex: j,
+                    step: step
                   }
                 );
                 
-                if (def.type === 'if')
-                  this._condition = result;
-                else if (def.type === 'and')
-                  this._condition = this._condition && result;
-                else if (def.type === 'or')
-                  this._condition = this._condition || result;
+                // In logical cases, applying the new condition
+                this._applyCondition(def.type, result);
               }
 
               break;
@@ -193,7 +210,7 @@ function Wrapper(grammar) {
       }
 
       // Triggering block ending callback if any
-      this._dispatch('block.end', block);
+      this._dispatch('block.after', block);
     }
   };
 }
