@@ -6,7 +6,6 @@
  * Organization: Médialab SciencesPo
  */
 
-// TODO: possibility to define rules for each of the blocks separately?
 // TODO: sublevels?
 
 var helpers = require('./helpers'),
@@ -152,12 +151,17 @@ function Wrapper(grammar) {
   };
 
   // Build an execution definition
-  this.buildDefinition = function(regex, callback, type) {
+  this.buildDefinition = function(type, regex, block, callback) {
+    if (typeof block === 'function') {
+      callback = block;
+      block = '*';
+    }
+
     var fn = function(matches, context) {
       return callback.apply(_this, matches.slice(1).concat(context));
     };
 
-    this._definitions['*'].push({
+    this._definitions[block].push({
       type: type,
       fn: fn,
       regex: regex
@@ -177,8 +181,8 @@ function Wrapper(grammar) {
   // Dynamically creating the definition methods from templates
   this._templates.map(function(t) {
     _this['def' + (t === 'normal' ? '' : helpers.capitalize(t))] =
-      function(regex, callback) {
-        _this.buildDefinition(regex, callback, t);
+      function(regex, block, callback) {
+        _this.buildDefinition(t, regex, block, callback);
       };
   });
 
@@ -197,7 +201,11 @@ function Wrapper(grammar) {
         throw 'plickle.wrapper.defs: wrong definition type (' + type + ')';
 
       // Registering the definition
-      _this['def' + helpers.capitalize(type)](def.pattern, def.method);
+      _this['def' + helpers.capitalize(type)](
+        def.pattern,
+        def.block || '*',
+        def.method
+      );
     });
   };
 
