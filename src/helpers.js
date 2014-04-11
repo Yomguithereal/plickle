@@ -26,8 +26,22 @@ function some(array, fn) {
   return !!first(array, fn);
 }
 
+function extend() {
+  var i,
+      k,
+      res = {},
+      l = arguments.length;
+
+  for (i = l - 1; i >= 0; i--)
+    for (k in arguments[i])
+      res[k] = arguments[i][k];
+
+  return res;
+};
+
 module.exports = {
   capitalize: capitalize,
+  extend: extend,
   first: first,
   some: some
 };

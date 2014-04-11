@@ -20,7 +20,7 @@ function Wrapper(grammar) {
 
   // State
   this._condition = true;
-  this._definitions = [];
+  this._definitions = {'*': []};
   this._events = {};
   this._vars = {};
 
@@ -32,7 +32,7 @@ function Wrapper(grammar) {
     var e = this._events[name];
 
     if (e !== undefined)
-      return e.call(this, Array.prototype.slice.call(arguments, 1));
+      return e.apply(this, Array.prototype.slice.call(arguments, 1));
   }
 
   // Should we run the function
@@ -51,6 +51,75 @@ function Wrapper(grammar) {
       this._condition = this._condition && result;
     else if (type === 'or')
       this._condition = this._condition || result;
+  };
+
+  function formatContext(block, step, type) {
+    return (type === 'block') ?
+      {block: block, step: step} :
+      {subBlock: block, subStep: step};
+  } 
+
+  // Iteration on blocks and subBlocks
+  this._iterate = function(blocks, eventPrefix, context) {
+    var defs,
+        stop,
+        block,
+        matched,
+        matches,
+        result;
+
+    var i, j, k, l, m, n;
+
+    // Through blocks
+    for (i = 0, l = blocks.length; i < l; i++) {
+      block = blocks[i];
+      defs = this._definitions['*'].concat(this._definitions[block.type] || []);
+
+      // Restoring condition
+      this._condition = true;
+
+      // Stopping if callback before return false
+      stop = (this._dispatch(eventPrefix + '.before', block) === false);
+
+      if (stop)
+        return;
+
+      // Through steps
+      for (j = 0, m = block.steps.length; j < m; j++) {
+        step = block.steps[j];
+
+        // Through definitions
+        for (k = 0, n = defs.length; k < n; k++) {
+          def = defs[k];
+
+          matched = false;
+          matches = step.match(def.regex);
+
+          if (matches) {
+            matched = true;
+
+            // Should we run the function?
+            if (this._pass(def.type)) {
+              result = def.fn(
+                matches,
+                helpers.extend(context, formatContext(block, step, eventPrefix))
+              );
+
+              // In logical cases, we apply the new condition
+              this._applyCondition(def.type, result);
+            }
+
+            break;
+          }
+        }
+
+        // Unmatched
+        this._dispatch('step.unmatched', step, eventPrefix);
+      }
+    }
+
+    // Block end
+    this._dispatch(eventPrefix + '.after', block);
   };
 
   // Public API
@@ -84,13 +153,13 @@ function Wrapper(grammar) {
 
   // Build an execution definition
   this.buildDefinition = function(regex, callback, type) {
-    var func = function(matches, context) {
+    var fn = function(matches, context) {
       return callback.apply(_this, matches.slice(1).concat(context));
     };
 
-    this._definitions.push({
+    this._definitions['*'].push({
       type: type,
-      func: func,
+      fn: fn,
       regex: regex
     });
   };
@@ -135,17 +204,7 @@ function Wrapper(grammar) {
   // Main execution function
   this.execute = function(string, config) {
     var data = this.parse(string),
-        config = config || {},
-        stop = false,
-        matched,
-        matches,
-        result,
-        block,
-        step,
-        substep,
-        def;
-
-    var i, j, k, l, m, n, o, p;
+        config = config || {};
 
     // Sorting
     if (config.filter !== undefined)
@@ -159,59 +218,7 @@ function Wrapper(grammar) {
     this._dispatch('execution.before', data);
 
     // Iterating through blocks
-    for (i = 0, l = data.blocks.length; i < l; i++) {
-      block = data.blocks[i];
-
-      // Restoring condition
-      this._condition = true;
-
-      // Triggering block beginning callback if any
-      stop = (this._dispatch('block.before', block) === false);
-
-      // Iterating through steps
-      if (!stop) {
-        for (j = 0, m = block.steps.length; j < m; j++) {
-          step = block.steps[j];
-
-          for (k = 0, n = this._definitions.length; k < n; k++) {
-            def = this._definitions[k];
-
-            matched = false;
-            matches = step.match(def.regex);
-
-            if (matches) {
-              matched = true;
-
-              // Should we run the function
-              if (this._pass(def.type)) {
-
-                result = def.func(
-                  matches, 
-                  {
-                    block: block,
-                    blockIndex: i,
-                    stepIndex: j,
-                    step: step
-                  }
-                );
-                
-                // In logical cases, applying the new condition
-                this._applyCondition(def.type, result);
-              }
-
-              break;
-            }
-          }
-
-          // Throw error on unmatched string
-          if (!matched)
-            this._dispatch('step.unmatched', step);
-        }
-      }
-
-      // Triggering block ending callback if any
-      this._dispatch('block.after', block);
-    }
+    this._iterate(data.blocks, 'block');
   };
 }
 

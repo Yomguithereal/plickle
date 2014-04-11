@@ -186,8 +186,6 @@ function Parser(grammar) {
     return line.trim();
   };
 
-  this.che
-
   this.checkBlock = function(blockType, children) {
     var test = function(b) {
       return b === blockType || b.name === blockType;
