@@ -72,12 +72,11 @@ function Parser(grammar) {
     // State
     var header = false,
         inBlocks = false,
-        inSubBlocks = false,
         blockLvl = false,
         subBlockLvl = false,
         blockMatches = null,
-        currentBlockIndex = null,
-        currentSubBlockIndex = null;
+        currentBlock = null,
+        currentSubBlock = null;
 
     // Placeholders
     var blocks = [],
@@ -120,6 +119,8 @@ function Parser(grammar) {
         else {
 
           if (blockLine) {
+
+            // Trying to assert a new block
             var blockType = blockMatches[1].toLowerCase(),
                 blockName = blockMatches[2].trim();
 
@@ -127,35 +128,36 @@ function Parser(grammar) {
             blockLvl = this.checkBlock(blockType);
 
             // SubBlock level?
-            if (this.needSubsteps && currentBlockIndex !== null) {
-              var type = blocks[currentBlockIndex].type,
-                  grammarBlock = helpers.first(this.grammar.blocks, function(b) {
+            if (this.needSubsteps && currentBlock !== null) {
+              var type = currentBlock.type,
+                  gblock = helpers.first(this.grammar.blocks, function(b) {
                     return b === type || b.name === type;
                   });
-              subBlockLvl = this.checkSubBlock(blockType, grammarBlock.children);
+              subBlockLvl = this.checkBlock(blockType, gblock.children);
             }
 
-            if (!blockLvl && !subBlockLvl) {
-              errorMsg('invalid block "' + blockMatches[1] + '"');
-            }
-            else if (blockLvl) {
+            // Pushing relevant blocks or triggering and error
+            if (blockLvl) {
               blocks.push(this.parseBlock(blockType, blockName, true));
-              currentBlockIndex = blocks.length - 1;
+              currentBlock = blocks[blocks.length -1];
             }
             else if (subBlockLvl) {
-              blocks[currentBlockIndex].substeps.push(
+              currentBlock.substeps.push(
                 this.parseBlock(blockType, blockName)
               );
-              currentSubBlockIndex = blocks[currentBlockIndex].substeps.length - 1;
+              currentSubBlock =
+                currentBlock.substeps[currentBlock.substeps - 1];
+            }
+            else {
+              errorMsg('invalid block "' + blockMatches[1] + '"');
             }
           }
           else {
-            if (blockLvl)
-              blocks[currentBlockIndex].steps.push(this.parseStep(line));
-            else if (subBlockLvl)
-              blocks[currentBlockIndex].substeps[currentSubBlockIndex].steps.push(
-                this.parseStep(line)
-              );
+
+            // Registering a step to the current block
+            (blockLvl ? currentBlock : currentSubBlock).steps.push(
+              this.parseStep(line)
+            );
           }
         }
       }
@@ -184,20 +186,14 @@ function Parser(grammar) {
     return line.trim();
   };
 
-  this.checkBlock = function(blockType) {
+  this.che
+
+  this.checkBlock = function(blockType, children) {
     var test = function(b) {
       return b === blockType || b.name === blockType;
     };
 
-    return helpers.some(this.grammar.blocks, test);
-  };
-
-  this.checkSubBlock = function(blockType, children) {
-    var test = function(b) {
-      return b === blockType || b.name === blockType;
-    };
-
-    return helpers.some(children, test);
+    return helpers.some(children || this.grammar.blocks, test);
   };
 
   this.parseBlock = function(blockType, blockName, sub) {
