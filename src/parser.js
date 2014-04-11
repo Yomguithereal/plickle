@@ -48,6 +48,10 @@ function Parser(grammar) {
     )
   };
 
+  this.needSubsteps = helpers.some(this.grammar.blocks, function(b) {
+    return b.children !== undefined;
+  });
+
   // Utilities
   //-----------
   this.cleanLine = function(line) {
@@ -119,11 +123,11 @@ function Parser(grammar) {
             var blockType = blockMatches[1].toLowerCase(),
                 blockName = blockMatches[2].trim();
 
-            // Block or SubBlock?
+            // Block level?
             blockLvl = this.checkBlock(blockType);
 
-            // TODO: refactor
-            if (currentBlockIndex !== null) {
+            // SubBlock level?
+            if (this.needSubsteps && currentBlockIndex !== null) {
               var type = blocks[currentBlockIndex].type,
                   grammarBlock = helpers.first(this.grammar.blocks, function(b) {
                     return b === type || b.name === type;
@@ -138,7 +142,7 @@ function Parser(grammar) {
               blocks.push(this.parseBlock(blockType, blockName, true));
               currentBlockIndex = blocks.length - 1;
             }
-            else {
+            else if (subBlockLvl) {
               blocks[currentBlockIndex].substeps.push(
                 this.parseBlock(blockType, blockName)
               );
