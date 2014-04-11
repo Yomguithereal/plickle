@@ -19,12 +19,33 @@ function Wrapper(grammar) {
 
   // State
   this._condition = true;
-  this._definitions = {'*': []};
+  this._definitions = {};
   this._events = {};
   this._vars = {};
 
   // Private Utilities
   //-------------------
+
+  // Build an execution definition
+  this._buildDefinition = function(type, regex, block, callback) {
+    if (typeof block === 'function') {
+      callback = block;
+      block = '*';
+    }
+
+    var fn = function(matches, context) {
+      return callback.apply(_this, matches.slice(1).concat(context));
+    };
+
+    if (this._definitions[block] === undefined)
+      this._definitions[block] = [];
+
+    this._definitions[block].push({
+      type: type,
+      fn: fn,
+      regex: regex
+    });
+  };
 
   // Call event if it exists
   this._dispatch = function(name) {
@@ -155,24 +176,6 @@ function Wrapper(grammar) {
     return (key === undefined) ? this._vars : this._vars[key];
   };
 
-  // Build an execution definition
-  this.buildDefinition = function(type, regex, block, callback) {
-    if (typeof block === 'function') {
-      callback = block;
-      block = '*';
-    }
-
-    var fn = function(matches, context) {
-      return callback.apply(_this, matches.slice(1).concat(context));
-    };
-
-    this._definitions[block].push({
-      type: type,
-      fn: fn,
-      regex: regex
-    });
-  };
-
   // Possible types of definition
   this._templates = [
     'normal',
@@ -187,7 +190,7 @@ function Wrapper(grammar) {
   this._templates.map(function(t) {
     _this['def' + (t === 'normal' ? '' : helpers.capitalize(t))] =
       function(regex, block, callback) {
-        _this.buildDefinition(t, regex, block, callback);
+        _this._buildDefinition(t, regex, block, callback);
       };
   });
 
